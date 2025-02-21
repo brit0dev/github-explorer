@@ -79,7 +79,7 @@ const Repository: React.FC = () => {
               <span>Forks</span>
             </li>
             <li>
-              <strong>67</strong>
+              <strong>{repository.open_issues_count}</strong>
               <span>Issues abertas</span>
             </li>
           </ul>
