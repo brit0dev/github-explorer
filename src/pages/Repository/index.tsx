@@ -65,7 +65,7 @@ const Repository: React.FC = () => {
               alt={repository.owner.login}
             />
             <div>
-              <strong>{repository.full_name}</strong>
+              <a target="_blank" href={"https://github.com/" + repository.full_name}><strong>{repository.full_name} <span className="box"><FiChevronRight size={14} /></span></strong></a>
               <p>{repository.description}</p>
             </div>
           </header>

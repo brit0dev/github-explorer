@@ -33,11 +33,55 @@ export const RepositoryInfo = styled.section`
     div {
       margin-left: 24px;
 
-      strong {
-        font-size: 36px;
+      a {
         color: #3d3d4d;
+        text-decoration: none;
       }
 
+      a:hover{
+        text-decoration: none;
+      	text-decoration-thickness: 2px;
+	color: #2d2d2d;	
+        transition: all 0.25s;
+
+	strong {
+	  span {
+	    transform: scale(1);
+	    svg {
+		opacity: 1;
+                transition: all 0.25s;
+
+	    }
+	  }
+	}
+		
+	}
+      }
+
+      strong {
+       	position: relative;
+	font-size: 36px;
+	padding: 0px 2px;	
+        span {
+            display: inline-block;
+            width:50px;
+            height: 50px;
+            transform: scale(0.8);
+            transition: all 0.25s;
+            z-index: -1;
+
+	    &, svg{
+            position: absolute;
+            top:1px;
+            right: 0px;
+            }
+
+            svg{
+              transform: rotate(-45deg);
+              opacity: 0;
+              transition: all 0.2s;
+            }
+      	}
       p {
         font-size: 18px;
         color: #737380;
