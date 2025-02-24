@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 import logoImg from '../../assets/logo.svg';
-import { Header, RepositoryInfo, Issues } from './styles';
+import { Header, RepositoryInfo, Issues, Pagination, PagButton, PagIndexButton } from './styles';
 import api from '../../services/api';
 
 type RepositoryParams = {
@@ -37,16 +37,37 @@ const Repository: React.FC = () => {
 
   const [repository, setRepository] = useState<RepositoryType | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+	const listRef = useRef<HTMLDivElement>(null);
+  const [itemsPage, setNumItems] = useState<number>(25);  
+  const [numPage,setNumPage] = useState<number>(1);
+  const [maxPages, setMaxPages] = useState(0);
 
   useEffect(() => {
     api.get(`repos/${repositoryFullName}`).then((response) => {
       setRepository(response.data);
     });
+	}, [params]);
 
-    api.get(`repos/${repositoryFullName}/issues`).then((response) => {
+	useEffect(() => {
+    api.get(`repos/${repositoryFullName}/issues?per_page=${itemsPage}&page=${numPage}`).then((response) => {
       setIssues(response.data);
     });
-  }, [params]);
+  }, [params,numPage]);
+
+  useEffect(()=>{
+    if(repository) setMaxPages(Math.ceil(repository.open_issues_count/itemsPage))
+ }, [repository])
+
+	const setPage = (index:number) => {
+		if(index < 0 || index > maxPages) return
+		setNumPage(index);
+			
+		if(index > 1){
+			listRef.current?.scrollIntoView({behavior:'smooth'});
+		} else {
+			window.scroll({top:0,behavior:'smooth'});
+		}
+	}
 
   return (
     <>
@@ -86,7 +107,7 @@ const Repository: React.FC = () => {
         </RepositoryInfo>
       )}
 
-      <Issues>
+      <Issues ref={listRef}>
         {issues.map((issue) => (
           <Link key={issue.id} to={issue.html_url} target="_blank">
             <div>
@@ -97,8 +118,20 @@ const Repository: React.FC = () => {
           </Link>
         ))}
       </Issues>
+	<Pagination>
+	<PagButton onClick={()=>setPage(numPage-1)}><FiChevronLeft /> Anterior</PagButton>
+	{numPage > 4 && <PagButton onClick={()=>setPage(1)}>Início</PagButton>}
+	{
+		Array.from(Array(maxPages+1).keys())
+			.slice(numPage-1 > 0 ? numPage - 1 : 1,numPage+2)
+				.map((e)=>{
+					return <PagIndexButton onClick={()=>setPage(e)} state={e == numPage ? 'Active' : ''}>{e}</PagIndexButton>
+				})
+	}
+	{numPage < maxPages-2 && <><span>_</span><PagIndexButton onClick={()=>setPage(maxPages)} state={maxPages == numPage ? 'Active' : ''}>{maxPages}</PagIndexButton></>}
+	<PagButton onClick={()=>setPage(numPage+1)}>Próximo <FiChevronRight/> </PagButton>
+	</Pagination>
     </>
-
     // <h1>
     //   Repository: {params.owner}/{params.repository}
     // </h1>

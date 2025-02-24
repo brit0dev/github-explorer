@@ -117,6 +117,7 @@ export const RepositoryInfo = styled.section`
 export const Issues = styled.div`
   margin-top: 80px;
   //max-width: 700px;
+	scroll-margin-top: 28px;
 
   a {
     background: #fff;
@@ -159,3 +160,59 @@ export const Issues = styled.div`
     }
   }
 `;
+
+export const Pagination = styled.nav`
+	margin: 16px 0px;
+	display:flex;
+	justify-content:center;
+	gap:1%;	
+	
+	span {
+		color:#999;
+
+	}
+`;
+
+export const PagButton = styled.button`
+	background: #fff;
+	color: #3d3d4d;
+	padding: 8px 12px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+
+	font-weight: regular;
+	
+	border: none;
+	border-radius: 4px;
+	
+	transition: all 0.25s;
+
+  svg {
+      transition: transform 0.2s;
+    }
+
+	&:hover{
+		background: ${shade(0.02, '#fff')};
+
+	}
+
+	&:last-child:hover svg{
+      transform: translateX(2px);
+	}
+	
+	&:first-child:hover svg{
+      transform: translateX(-2px);
+	}
+`
+
+
+
+export const PagIndexButton = styled(PagButton)<{state:string}>`
+	font-weight: bold;
+	opacity:${({state})=>(state=='Active'? 1 : 0.6)};
+	&:hover{
+		background: #fff;
+		opacity:1;
+	}
+`
