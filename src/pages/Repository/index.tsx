@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-
 import logoImg from '../../assets/logo.svg';
-import { Header, RepositoryInfo, Issues, Pagination, PagButton, PagIndexButton } from './styles';
+import { Header, Main, RepositoryInfo, Issues, Pagination, PagButton, PagIndexButton } from './styles';
 import api from '../../services/api';
 
 type RepositoryParams = {
   repository: string;
   owner: string;
 };
+
 type RepositoryType = {
   full_name: string;
   description: string;
@@ -34,13 +34,16 @@ type Issue = {
 const Repository: React.FC = () => {
   const params = useParams<RepositoryParams>();
   const repositoryFullName = `${params.owner}/${params.repository}`;
-
-  const [repository, setRepository] = useState<RepositoryType | null>(null);
+  
+	const [repository, setRepository] = useState<RepositoryType | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
 	const listRef = useRef<HTMLDivElement>(null);
   const [itemsPage, setNumItems] = useState<number>(25);  
   const [numPage,setNumPage] = useState<number>(1);
   const [maxPages, setMaxPages] = useState(0);
+  const [stickyHeader, setStickyHeader] = useState<boolean>(false);
+  const [showIssues, setShowIssues] = useState<boolean>(false);
+  const [showHeaderRepo, setShowHeaderRepo] = useState<boolean>(false);
 
   useEffect(() => {
     api.get(`repos/${repositoryFullName}`).then((response) => {
@@ -58,6 +61,33 @@ const Repository: React.FC = () => {
     if(repository) setMaxPages(Math.ceil(repository.open_issues_count/itemsPage))
  }, [repository])
 
+	useEffect(()=>{
+		const onScroll = () => {
+			if (window.pageYOffset> 40 && !stickyHeader){	
+				setStickyHeader(true);
+			} else if(window.pageYOffset < 40 && stickyHeader) {
+				setStickyHeader(false)
+			}
+
+			if (window.pageYOffset > 165 && !showHeaderRepo){
+				setShowHeaderRepo(true);
+			}	else if (window.pageYOffset < 165 && showHeaderRepo){
+				setShowHeaderRepo(false);
+			}
+
+			if (window.pageYOffset > 335 && !showIssues){
+				setShowIssues(true);
+			}	else if (window.pageYOffset < 335 && showIssues){
+				setShowIssues(false);
+			}		
+		};		
+ 
+	 window.addEventListener("scroll", onScroll);
+
+	return () => window.removeEventListener("scroll", onScroll);
+	},[stickyHeader, showIssues, showHeaderRepo])
+
+
 	const setPage = (index:number) => {
 		if(index < 0 || index > maxPages) return
 		setNumPage(index);
@@ -71,13 +101,25 @@ const Repository: React.FC = () => {
 
   return (
     <>
-      <Header>
-        <img src={logoImg} alt="Github Explorer" />
-        <Link to="/">
-          <FiChevronLeft size={16} />
-          Voltar
-        </Link>
+      <Header sticky={stickyHeader} showissues={showIssues} showrepository={showHeaderRepo}> 
+				<div className='headerCont'>
+        	<div>
+						<img src={logoImg} alt="Github Explorer" />
+						{(!!repository && stickyHeader) && (
+						<p>
+							{repository.full_name}
+							<span className="headerIssuesInfo">Issues:
+								<span>{numPage}/{maxPages}</span>
+							</span>
+						</p>)}
+					</div>
+					<Link to="/">
+         	 	<FiChevronLeft size={16} />
+          	Voltar
+        	</Link>
+				</div>
       </Header>
+			<Main>
       {repository && (
         <RepositoryInfo>
           <header>
@@ -118,6 +160,7 @@ const Repository: React.FC = () => {
           </Link>
         ))}
       </Issues>
+			</Main>
 	<Pagination>
 	<PagButton onClick={()=>setPage(numPage-1)}><FiChevronLeft /> Anterior</PagButton>
 	{numPage > 4 && <PagButton onClick={()=>setPage(1)}>Início</PagButton>}

@@ -1,12 +1,97 @@
-import styled from 'styled-components';
+import styled,{css, keyframes} from 'styled-components';
 import { shade } from 'polished';
 
-export const Header = styled.header`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+type HeaderParams = {
+	sticky:boolean; 
+	showissues:boolean;
+	showrepository:boolean;
+	children?: JSX.Element;
+}
 
+const containerSize = css`
+	max-width:960px;
+	padding: 0px 20px;
+`
+const flexAlignCenter = css`
+	display: flex;
+ 	align-items: center;
+`
+
+export const Header = styled.header<HeaderParams>`
+	${flexAlignCenter}
+	background: ${({sticky})=> sticky ? '#fff' : 'transparent'};
+	justify-content:center;	
+	position: sticky;
+	top: 0px;
+	box-shadow: 1px 1px 2px ${({sticky})=> sticky ? '#00000010' : '#00000000'};
+	transition: background 0.25s;	
+	z-index: 999;
+	
+  div.headerCont {
+		${containerSize}
+		${({sticky})=> sticky ? 'max-width:1100px' : ''};
+		${flexAlignCenter}  		
+		justify-content: space-between;
+		flex: 1;
+		transition: all ${({sticky})=> sticky ? '0.25s' : '0.05s'};
+
+		div {
+			${flexAlignCenter}
+			gap: 12px;
+
+			p {
+				color: #999;
+				padding: 4px 10px;
+				display: inline-flex;
+				align-items: center;
+				border: 1px #ededed solid;
+				border-radius: 8px;
+				
+				opacity: ${({showrepository}) => showrepository ? 1 : 0};
+				transition: ${({showrepository}) => showrepository ? 
+				'opacity 0.25s ease-out'  
+				: 
+				'opacity 0.25s ease-out'};
+
+
+
+				span.headerIssuesInfo{
+					background: #3d3d4d;
+					color: #fff;
+
+					width: ${({showissues}) => showissues ? 104 : 0}px;
+					margin-left: ${({showissues}) => showissues ? 8 : 0}px;
+					padding: 4px 0px;
+
+					display: inline-flex;
+					justify-content: space-evenly;	
+					align-items: center;
+
+					font-size: 14px;
+					font-weight: normal;
+					border-radius: 6px;
+					overflow: hidden;
+					opacity: ${({showissues}) => showissues ? 1 : 0};
+
+					transition: ${({showissues}) => showissues ? 
+					'all 0.25s, 0.25s opacity 0.25s ease-out'  
+					: 
+					'0.25s all 0.25s, opacity 0.25s ease-out'};
+
+					span {
+						background: #fff;
+						color: #3d3d4d;
+						padding: 2px 4px 1px;
+						font-weight: bold;
+						border-radius: 4px;
+					}
+				}	
+			}
+	}
+		
   a {
+		background: transparent;
+		padding: 16px 0px;
     display: flex;
     align-items: center;
     text-decoration: none;
@@ -19,19 +104,24 @@ export const Header = styled.header`
   }
 `;
 
+export const Main = styled.main`
+	${containerSize}
+	margin: 0 auto;
+`;
+
+
 export const RepositoryInfo = styled.section`
   margin-top: 80px;
   header {
-    display: flex;
-    align-items: center;
-
-    img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-    }
-    div {
-      margin-left: 24px;
+  ${flexAlignCenter}
+	
+	img {
+		width: 120px;
+		height: 120px;
+		border-radius: 50%;
+	}
+	div {
+		margin-left: 24px;
 
       a {
         color: #3d3d4d;
@@ -41,22 +131,20 @@ export const RepositoryInfo = styled.section`
       a:hover{
         text-decoration: none;
       	text-decoration-thickness: 2px;
-	color: #2d2d2d;	
+				color: #2d2d2d;	
         transition: all 0.25s;
 
-	strong {
-	  span {
-	    transform: scale(1);
-	    svg {
-		opacity: 1;
-                transition: all 0.25s;
-
-	    }
-	  }
-	}
-		
-	}
-      }
+				strong {
+	  			span {
+						transform: scale(1);
+						svg {
+							opacity: 1;
+							transition: all 0.25s;
+	    			}
+	  			}
+				}
+			}
+  }
 
       strong {
        	position: relative;
@@ -114,10 +202,11 @@ export const RepositoryInfo = styled.section`
     }
   }
 `;
-export const Issues = styled.div`
+
+export const Issues = styled.section`
   margin-top: 80px;
   //max-width: 700px;
-	scroll-margin-top: 28px;
+	scroll-margin-top: 64px;
 
   a {
     background: #fff;
@@ -177,20 +266,16 @@ export const PagButton = styled.button`
 	background: #fff;
 	color: #3d3d4d;
 	padding: 8px 12px;
-	display: flex;
-	align-items: center;
+	${flexAlignCenter}
 	gap: 4px;
-
 	font-weight: regular;
-	
 	border: none;
 	border-radius: 4px;
-	
 	transition: all 0.25s;
 
   svg {
       transition: transform 0.2s;
-    }
+  }
 
 	&:hover{
 		background: ${shade(0.02, '#fff')};
@@ -206,11 +291,10 @@ export const PagButton = styled.button`
 	}
 `
 
-
-
 export const PagIndexButton = styled(PagButton)<{state:string}>`
 	font-weight: bold;
 	opacity:${({state})=>(state=='Active'? 1 : 0.6)};
+	
 	&:hover{
 		background: #fff;
 		opacity:1;
