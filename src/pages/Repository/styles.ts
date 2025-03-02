@@ -105,8 +105,6 @@ export const Header = styled.header<HeaderParams>`
 `;
 
 export const Main = styled.main`
-	${containerSize}
-	margin: 0 auto;
 `;
 
 

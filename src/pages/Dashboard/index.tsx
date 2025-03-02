@@ -5,7 +5,7 @@ import api from '../../services/api';
 
 import logoImg from '../../assets/logo.svg';
 
-import { Title, Form, Repositories, Error } from './styles';
+import { Title, Form, Repositories, Main, Error } from './styles';
 
 type Repository = {
   full_name: string;
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <>
+    <Main>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore Repositórios no Github</Title>
 
@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
           </Link>
         )).reverse()}
       </Repositories>
-    </>
+    </Main>
   );
 };
 

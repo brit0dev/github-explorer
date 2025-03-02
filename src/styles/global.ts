@@ -23,5 +23,11 @@ body, input, button{
 button{
   cursor:pointer;
 }
+main {
+	max-width: 960px;
+	padding: 0px 20px;
+	margin: 0 auto;
+}
 
+}
 `;

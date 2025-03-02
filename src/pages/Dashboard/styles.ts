@@ -5,6 +5,8 @@ type FormProps = {
   hasError: boolean;
 };
 
+export const Main = styled.main``;
+
 export const Title = styled.h1`
   font-size: 48px;
   color: #3a3a3a;
