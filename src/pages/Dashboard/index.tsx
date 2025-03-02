@@ -5,7 +5,7 @@ import api from '../../services/api';
 
 import logoImg from '../../assets/logo.svg';
 
-import { Title, Form, Repositories, Main, Error } from './styles';
+import { Title, Form, Repositories, Main, SearchPreviewBox , Error } from './styles';
 
 type Repository = {
   full_name: string;
@@ -66,12 +66,24 @@ const Dashboard: React.FC = () => {
       <Title>Explore Repositórios no Github</Title>
 
       <Form hasError={!!inputError} onSubmit={handleAddRepository}>
+				<div className="input">
         <input
           value={newRepo}
           onChange={(e) => setNewRepo(e.target.value)}
           placeholder="Digite o nome do repositório."
         />
         <button type="submit">Pesquisar</button>
+				</div>
+				<SearchPreviewBox>
+					<ul>
+						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
+						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
+						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
+						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
+						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button className="added">Adicionado</button></li>
+					</ul>
+				</SearchPreviewBox>
+
       </Form>
       {inputError && <Error>{inputError}</Error>}
       <Repositories>
