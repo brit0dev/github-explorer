@@ -8,12 +8,14 @@ import logoImg from '../../assets/logo.svg';
 import { Title, Form, Repositories, Main, SearchPreviewBox , Error } from './styles';
 
 type Repository = {
-  full_name: string;
+  name: string;
+	full_name: string;
   description: string;
   owner: {
     login: string;
     avatar_url: string;
   };
+	stargazers_count: number;
 };
 const Dashboard: React.FC = () => {
   const [newRepo, setNewRepo] = useState('');
@@ -28,6 +30,7 @@ const Dashboard: React.FC = () => {
     }
     return [];
   });
+	const [searchedRepositories, setSearchedRepositories] = useState<Repository[] | null>(null);
 
   useEffect(() => {
     localStorage.setItem(
@@ -36,36 +39,51 @@ const Dashboard: React.FC = () => {
     );
   }, [repositories]);
 
-  async function handleAddRepository(
-    event: FormEvent<HTMLFormElement>
+  useEffect(() => {
+    if (newRepo.includes("/") && !searchedRepositories){
+			handleSearchRepository()
+		} else if(!newRepo.includes("/")){
+			setSearchedRepositories(null)
+		}
+  }, [newRepo]);
+
+ async function handleSearchRepository(
+    event?: FormEvent<HTMLFormElement>
   ): Promise<void> {
     // Add new repo
     // Get GitHub API
     // Save new repo on state
-    event.preventDefault(); //Prevents page reloading (submit)
-    if (!newRepo) {
+		if(event) event.preventDefault(); //Prevents page reloading (submit)
+    
+		if (!newRepo) {
       setInputError('Digite o autor/nome do repositório');
       return;
     }
+
     try {
-      const response = await api.get<Repository>(`repos/${newRepo}`);
+      //const response = await api.get<Repository>(`repos/${newRepo}`);
+			const user = newRepo.split('/')[0];
+      const response = await api.get<Repository[]>(`users/${user}/repos?per_page=100`);
 
-      const repository = response.data;
+      const repositories = response.data;
 
-      setRepositories([...repositories, repository]);
-      setNewRepo('');
+			setSearchedRepositories(repositories);
+			console.log(repositories);
+      //setRepositories([...repositories, repository]);
+      //setNewRepo('');
       setInputError('');
     } catch (err) {
       setInputError('Erro na buscar por esse repositório');
     }
   }
 
+
   return (
     <Main>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore Repositórios no Github</Title>
 
-      <Form hasError={!!inputError} onSubmit={handleAddRepository}>
+      <Form hasError={!!inputError} onSubmit={handleSearchRepository}>
 				<div className="input">
         <input
           value={newRepo}
@@ -74,15 +92,19 @@ const Dashboard: React.FC = () => {
         />
         <button type="submit">Pesquisar</button>
 				</div>
-				<SearchPreviewBox>
-					<ul>
-						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
-						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
-						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
-						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button>Adicionar</button></li>
-						<li><p>facebook<span>/react</span> &bull; The library for web and native user interfaces.</p><button className="added">Adicionado</button></li>
+
+				{searchedRepositories && 
+					<SearchPreviewBox>
+						<ul>
+							{searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
+							.filter((repo)=>repo.name.includes(newRepo.split('/')[1]))
+							.slice(0,5).map((searchedRepo)=>(
+								<li>
+									<p>{searchedRepo.owner.login}<span>/{searchedRepo.name}</span><br/> {searchedRepo.description ? searchedRepo.description : "No description..."}</p>
+								</li>
+							))}
 					</ul>
-				</SearchPreviewBox>
+				</SearchPreviewBox>}
 
       </Form>
       {inputError && <Error>{inputError}</Error>}
