@@ -29,6 +29,7 @@ type UserData = {
 const Dashboard: React.FC = () => {
   const [repoPath, setRepoPath] = useState('');
 	const [repoUser, setRepoUser] = useState('');
+	const [repoSearchTerm, setRepoSearchTerm] = useState('');
   const [inputError, setInputError] = useState('');
   const [repositories, setRepositories] = useState<Repository[]>(() => {
     const storagedRepositories = localStorage.getItem(
@@ -52,7 +53,11 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
 		const user = repoPath.split('/')[0];
-		const userChange = user!= repoUser
+		const searchTerm = repoPath.split('/')[1];
+		const userChange = user!= repoUser;
+
+		if (searchTerm != repoSearchTerm) setRepoSearchTerm(searchTerm);
+
 		if(userChange){
 			setRepoUser(user);
 			setSearchedRepoLimitError(false);
@@ -61,13 +66,13 @@ const Dashboard: React.FC = () => {
 		}
 
 		if (repoPath.includes("/") && !searchedRepositories && (!searchedRepoLimitError || userChange)){
-			console.log('Acho que o useEffect não observa a mudança daquilo que não tá no array dele');
 			handlePreviewRepository()
 		} else if(!repoPath.includes("/")){
-			setSearchedRepositories(null)
-			setRepoUser('')
+			setSearchedRepositories(null);
+			setRepoUser('');
+			setRepoSearchTerm('');
 		} else if(searchedRepoLimitError && inputError){
-			setInputError('')
+			setInputError('');
 		}
   }, [repoPath, searchedRepositories]);
 
@@ -138,6 +143,21 @@ function addRepository(repository: Repository):void {
     }
   }
 
+function searchMatchScore(str: string, subStr: string): number {
+    str = str.toLowerCase();
+    subStr = subStr.toLowerCase();
+
+    let index = str.indexOf(subStr);
+    let indexScore = index === -1 ? Infinity : index;
+
+    let commonChars = Array.from(subStr).filter(char => str.includes(char)).length;
+
+    let lengthScore = str.length;
+
+		console.log(str, subStr, indexScore, lengthScore)
+    return 100/(indexScore+1) - commonChars - lengthScore;
+}
+
   return (
     <Main>
       <img src={logoImg} alt="Github Explorer" />
@@ -157,7 +177,8 @@ function addRepository(repository: Repository):void {
 					<SearchPreviewBox>
 						<ul>
 							{searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
-							.filter((repo)=>repo.name.includes(repoPath.split('/')[1]))
+							.filter((repo)=>repo.name.toLowerCase().includes(repoSearchTerm.toLowerCase()))
+							.sort((a,b)=> searchMatchScore(b.name, repoSearchTerm) - searchMatchScore(a.name, repoSearchTerm))
 							.slice(0,5).map((repo)=>(
 								<li key={repo.name}>
 									<p>{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}</p>
