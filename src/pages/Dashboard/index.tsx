@@ -17,8 +17,18 @@ type Repository = {
   };
 	stargazers_count: number;
 };
+
+type UserData = {
+	login: string;
+	avatar_url: string;
+
+	url: string;
+	public_repos: number;
+}
+
 const Dashboard: React.FC = () => {
-  const [newRepo, setNewRepo] = useState('');
+  const [repoPath, setRepoPath] = useState('');
+	const [repoUser, setRepoUser] = useState('');
   const [inputError, setInputError] = useState('');
   const [repositories, setRepositories] = useState<Repository[]>(() => {
     const storagedRepositories = localStorage.getItem(
@@ -31,6 +41,7 @@ const Dashboard: React.FC = () => {
     return [];
   });
 	const [searchedRepositories, setSearchedRepositories] = useState<Repository[] | null>(null);
+	const [searchedRepoLimitError, setSearchedRepoLimitError] = useState<boolean>(false);
 
   useEffect(() => {
     localStorage.setItem(
@@ -40,43 +51,88 @@ const Dashboard: React.FC = () => {
   }, [repositories]);
 
   useEffect(() => {
-    if (newRepo.includes("/") && !searchedRepositories){
-			handleSearchRepository()
-		} else if(!newRepo.includes("/")){
-			setSearchedRepositories(null)
+		const user = repoPath.split('/')[0];
+		const userChange = user!= repoUser
+		if(userChange){
+			setRepoUser(user);
+			setSearchedRepoLimitError(false);
+			setSearchedRepositories(null);
+			setInputError('');
 		}
-  }, [newRepo]);
 
- async function handleSearchRepository(
-    event?: FormEvent<HTMLFormElement>
-  ): Promise<void> {
-    // Add new repo
-    // Get GitHub API
-    // Save new repo on state
-		if(event) event.preventDefault(); //Prevents page reloading (submit)
-    
-		if (!newRepo) {
+		if (repoPath.includes("/") && !searchedRepositories && (!searchedRepoLimitError || userChange)){
+			console.log('Acho que o useEffect não observa a mudança daquilo que não tá no array dele');
+			handlePreviewRepository()
+		} else if(!repoPath.includes("/")){
+			setSearchedRepositories(null)
+			setRepoUser('')
+		} else if(searchedRepoLimitError && inputError){
+			setInputError('')
+		}
+  }, [repoPath, searchedRepositories]);
+
+ async function handlePreviewRepository(): Promise<void> {
+		if (!repoPath) {
       setInputError('Digite o autor/nome do repositório');
+
       return;
     }
 
     try {
-      //const response = await api.get<Repository>(`repos/${newRepo}`);
-			const user = newRepo.split('/')[0];
-      const response = await api.get<Repository[]>(`users/${user}/repos?per_page=100`);
+			const user = repoPath.split('/')[0];
+			const userData = await api.get<UserData>(`users/${user}`);			
+			const userReposCount = userData.data.public_repos;
 
-      const repositories = response.data;
+			console.log(userData)		
+	
+			if (userReposCount > 500) {
+				setInputError('Muitos repositórios, não será possível exibir o preview. Digite o caminho completo do repositório.')
+				setSearchedRepoLimitError(true)
+				return
+			} else if (userReposCount == 0){
+				setInputError('Esse usuário não possui repositórios públicos');
+				return
+			}
+
+			const totalPages = Math.ceil(userReposCount / 100);
+			let repositories:Repository[] = [];
+
+			for(let i=1; i <= totalPages; i++){
+				const response = await api.get<Repository[]>(`users/${user}/repos?per_page=100&page=${i}`);
+				repositories = [...repositories, ...response.data]
+			}
+			
 
 			setSearchedRepositories(repositories);
 			console.log(repositories);
-      //setRepositories([...repositories, repository]);
-      //setNewRepo('');
-      setInputError('');
     } catch (err) {
       setInputError('Erro na buscar por esse repositório');
     }
   }
 
+ async function handleSearchRepository(
+    event?: FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    // Add new repo - Get GitHub API - Save new repo on state
+		if(event) event.preventDefault(); //Prevents page reloading (submit)
+    
+		if (!repoPath) {
+      setInputError('Digite o autor/nome do repositório');
+      return;
+    }
+
+    try {
+     	const response = await api.get<Repository>(`repos/${repoPath}`);
+			const repository = response.data;
+
+      setRepositories([...repositories, repository]);
+
+      setRepoPath('');
+      setInputError('');
+    } catch (err) {
+      setInputError('Erro na buscar por esse repositório');
+    }
+  }
 
   return (
     <Main>
@@ -86,20 +142,20 @@ const Dashboard: React.FC = () => {
       <Form hasError={!!inputError} onSubmit={handleSearchRepository}>
 				<div className="input">
         <input
-          value={newRepo}
-          onChange={(e) => setNewRepo(e.target.value)}
+          value={repoPath}
+          onChange={(e) => setRepoPath(e.target.value)}
           placeholder="Digite o nome do repositório."
         />
         <button type="submit">Pesquisar</button>
 				</div>
 
-				{searchedRepositories && 
+				{(searchedRepositories) && 
 					<SearchPreviewBox>
 						<ul>
 							{searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
-							.filter((repo)=>repo.name.includes(newRepo.split('/')[1]))
+							.filter((repo)=>repo.name.includes(repoPath.split('/')[1]))
 							.slice(0,5).map((searchedRepo)=>(
-								<li>
+								<li key={searchedRepo.name}>
 									<p>{searchedRepo.owner.login}<span>/{searchedRepo.name}</span><br/> {searchedRepo.description ? searchedRepo.description : "No description..."}</p>
 								</li>
 							))}
