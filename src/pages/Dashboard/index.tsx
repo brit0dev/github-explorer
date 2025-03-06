@@ -71,6 +71,10 @@ const Dashboard: React.FC = () => {
 		}
   }, [repoPath, searchedRepositories]);
 
+function addRepository(repository: Repository):void {
+      setRepositories([...repositories, repository]);
+}
+
  async function handlePreviewRepository(): Promise<void> {
 		if (!repoPath) {
       setInputError('Digite o autor/nome do repositório');
@@ -125,7 +129,7 @@ const Dashboard: React.FC = () => {
      	const response = await api.get<Repository>(`repos/${repoPath}`);
 			const repository = response.data;
 
-      setRepositories([...repositories, repository]);
+			addRepository(repository);
 
       setRepoPath('');
       setInputError('');
@@ -154,9 +158,10 @@ const Dashboard: React.FC = () => {
 						<ul>
 							{searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
 							.filter((repo)=>repo.name.includes(repoPath.split('/')[1]))
-							.slice(0,5).map((searchedRepo)=>(
-								<li key={searchedRepo.name}>
-									<p>{searchedRepo.owner.login}<span>/{searchedRepo.name}</span><br/> {searchedRepo.description ? searchedRepo.description : "No description..."}</p>
+							.slice(0,5).map((repo)=>(
+								<li key={repo.name}>
+									<p>{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}</p>
+									<button type="button" onClick={()=>{addRepository(repo)}}>Adicionar</button>
 								</li>
 							))}
 					</ul>
