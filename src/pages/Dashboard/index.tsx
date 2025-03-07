@@ -2,9 +2,7 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-
 import logoImg from '../../assets/logo.svg';
-
 import { Title, Form, Repositories, Main, SearchPreviewBox , Error } from './styles';
 
 type Repository = {
@@ -41,6 +39,7 @@ const Dashboard: React.FC = () => {
     }
     return [];
   });
+	const [showSearchPreview, setShowSearchPreview] = useState(false);
 	const [searchedRepositories, setSearchedRepositories] = useState<Repository[] | null>(null);
 	const [searchedRepoLimitError, setSearchedRepoLimitError] = useState<boolean>(false);
 
@@ -63,6 +62,7 @@ const Dashboard: React.FC = () => {
 			setSearchedRepoLimitError(false);
 			setSearchedRepositories(null);
 			setInputError('');
+			setShowSearchPreview(false)
 		}
 
 		if (repoPath.includes("/") && !searchedRepositories && (!searchedRepoLimitError || userChange)){
@@ -71,6 +71,7 @@ const Dashboard: React.FC = () => {
 			setSearchedRepositories(null);
 			setRepoUser('');
 			setRepoSearchTerm('');
+			setShowSearchPreview(false)
 		} else if(searchedRepoLimitError && inputError){
 			setInputError('');
 		}
@@ -103,6 +104,8 @@ function addRepository(repository: Repository):void {
 				return
 			}
 
+			setShowSearchPreview(true);
+
 			const totalPages = Math.ceil(userReposCount / 100);
 			let repositories:Repository[] = [];
 
@@ -110,7 +113,6 @@ function addRepository(repository: Repository):void {
 				const response = await api.get<Repository[]>(`users/${user}/repos?per_page=100&page=${i}`);
 				repositories = [...repositories, ...response.data]
 			}
-			
 
 			setSearchedRepositories(repositories);
 			console.log(repositories);
@@ -158,6 +160,8 @@ function searchMatchScore(str: string, subStr: string): number {
     return 100/(indexScore+1) - commonChars - lengthScore;
 }
 
+
+
   return (
     <Main>
       <img src={logoImg} alt="Github Explorer" />
@@ -173,16 +177,20 @@ function searchMatchScore(str: string, subStr: string): number {
         <button type="submit">Pesquisar</button>
 				</div>
 
-				{(searchedRepositories) && 
-					<SearchPreviewBox>
+				{(showSearchPreview) && 
+					<SearchPreviewBox open={!!searchedRepositories}>
 						<ul>
-							{searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
+							{searchedRepositories && searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
 							.filter((repo)=>repo.name.toLowerCase().includes(repoSearchTerm.toLowerCase()))
 							.sort((a,b)=> searchMatchScore(b.name, repoSearchTerm) - searchMatchScore(a.name, repoSearchTerm))
 							.slice(0,5).map((repo)=>(
-								<li key={repo.name}>
-									<p>{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}</p>
-									<button type="button" onClick={()=>{addRepository(repo)}}>Adicionar</button>
+								<li key={repo.name} onClick={()=>{addRepository(repo)}}>
+								<div>
+									<p>
+										{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}
+									</p>
+									<button type="button"><span>Adicionar</span></button>
+								</div>
 								</li>
 							))}
 					</ul>

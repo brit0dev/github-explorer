@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { shade } from 'polished';
 
 type FormProps = {
@@ -16,50 +16,104 @@ export const Title = styled.h1`
   margin-top: 80px;
 `;
 
-export const SearchPreviewBox = styled.div`
-	flex-basis: 100%;
+
+const liAnimation = keyframes`
+	0%{
+		opacity: 0;	
+	}
+	100%{
+		opacity: 1;
+	}
+
+`;
+
+export const SearchPreviewBox = styled.div<{open: boolean}>`
+	max-height: ${({open}) => (open ? '600px':'0px')};
+
 	background: #fff;
-	width: 77%;
-	padding: 0.25em 1em;
 	border-radius: 8px;
 	margin-top: 0.5em;
-	/* display: none; */
+	display: flex;
+	flex-direction: column;
+	overflow:hidden;
+
+	transition: all 1s;
 
 	ul {
 		list-style: none;
-
+		opacity: ${({open}) => (open ? 1:0)};
+		transition: 1s opacity 0.2s;
+		
 		li {
 			color: #a3a3a3;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			border-bottom: 1px #efefef solid;
+			padding: 0 1em;
+			transition: opacity 0.2s;				
+			cursor: pointer;
+			opacity: 0;
 
-			p{
-				padding: 0.75em 0.5em;
+			animation: ${liAnimation} 0.3s ease-out forwards;
+			&:hover{
+				background: #f9f9f9;
+			}
 
-				span {
-					color: #3a3a3a;
-					font-weight: bold;
+			div{
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				
+				border-bottom: 1px #efefef solid;
+
+				p {
+					padding: 0.75em 0.5em;
+					user-select: none;
+					-webkit-user-select: none;
+
+					span {
+						color: #3a3a3a;
+						font-weight: bold;
+					}
 				}
 			}
 
+			&:hover button{opacity:1;}
 			button {
 				background: transparent;
 				color: #3a3a3a;
 				display: inline;
 				padding: 0.3em 0.625em;
 				
-				border: 1px #dedede solid;
+				font-weight: normal;
+
+				border: 1px #737380 solid;
 				border-radius: 0.625em;
+
+				opacity: 0;
+			transition: opacity 0.3s ease-out;
 			}
 
 			button.added{
-
 				opacity: 0.5;
 			}
 		}
-		li:last-child {border:none;}
+		
+		li:first-child{padding-top: 0.25em;}
+
+		li:last-child div {border:none;}
+		li:last-child{padding-bottom: 0.25em;}
+
+
+		li:nth-child(2) {
+			animation-delay: 0.2s;
+		}
+		li:nth-child(3) {
+			animation-delay: 0.3s;
+		}
+		li:nth-child(4){
+			animation-delay: 0.4s;
+		}
+		li:nth-child(5){
+			animation-delay: 0.5s;
+		}
 	}
 
 `;
@@ -70,7 +124,7 @@ export const Form = styled.form<FormProps>`
   max-width: 700px;
 
   display: flex;
-	flex-wrap: wrap;
+	flex-direction: column;
 	div.input	{
 		display: flex;
 		flex: 1;
