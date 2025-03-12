@@ -53,11 +53,11 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
 		const user = repoPath.split('/')[0];
 		const searchTerm = repoPath.split('/')[1];
-		const userChange = user!= repoUser;
+		const userChange = user != repoUser;
 
 		if (searchTerm != repoSearchTerm) setRepoSearchTerm(searchTerm);
 
-		if(userChange){
+		if (userChange){
 			setRepoUser(user);
 			setSearchedRepoLimitError(false);
 			setSearchedRepositories(null);
@@ -121,6 +121,20 @@ function addRepository(repository: Repository):void {
     }
   }
 
+	function handleAddRepository(repository: Repository): React.MouseEventHandler<HTMLLIElement>{
+		return (event: React.MouseEvent<HTMLLIElement>) => {
+			
+			const button = event.currentTarget.querySelector('button');
+			if (button){ 
+				button.classList.add("added");
+				button.children[0].textContent = "Adicionado";
+			}
+
+			addRepository(repository)
+			
+		}
+	}
+
  async function handleSearchRepository(
     event?: FormEvent<HTMLFormElement>
   ): Promise<void> {
@@ -160,8 +174,6 @@ function searchMatchScore(str: string, subStr: string): number {
     return 100/(indexScore+1) - commonChars - lengthScore;
 }
 
-
-
   return (
     <Main>
       <img src={logoImg} alt="Github Explorer" />
@@ -184,7 +196,7 @@ function searchMatchScore(str: string, subStr: string): number {
 							.filter((repo)=>repo.name.toLowerCase().includes(repoSearchTerm.toLowerCase()))
 							.sort((a,b)=> searchMatchScore(b.name, repoSearchTerm) - searchMatchScore(a.name, repoSearchTerm))
 							.slice(0,5).map((repo)=>(
-								<li key={repo.name} onClick={()=>{addRepository(repo)}}>
+								<li key={repo.name} onClick={handleAddRepository(repo)}>
 								<div>
 									<p>
 										{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}

@@ -27,6 +27,34 @@ const liAnimation = keyframes`
 
 `;
 
+
+
+const addedButtonAnimation = keyframes`
+	0%{
+	transform: scale(1.04)
+	} 
+	45%{
+		transform: scale(1)
+	}	
+
+	30%{
+			background: #03c159;
+			color: #fff;
+			border: 1px #03c159 solid;
+	}
+	65%{
+			background: #03bd57;
+			color: #fff;
+			border: 1px #03bd57 solid;
+	}
+	100%{
+		background: transparent;
+		color: #b3b3b3;
+		border: 1px #b3b3b3 solid;
+	}
+
+
+`;
 export const SearchPreviewBox = styled.div<{open: boolean}>`
 	max-height: ${({open}) => (open ? '600px':'0px')};
 
@@ -77,22 +105,27 @@ export const SearchPreviewBox = styled.div<{open: boolean}>`
 
 			&:hover button{opacity:1;}
 			button {
-				background: transparent;
-				color: #3a3a3a;
+				background: #2a2a2a;
+				color: #fff;
 				display: inline;
-				padding: 0.3em 0.625em;
+				padding: 0.3em 0.750em;
 				
 				font-weight: normal;
 
-				border: 1px #737380 solid;
-				border-radius: 0.625em;
+				border: 1px #1a1a1a solid;
+				border-radius: 1.5em;
 
 				opacity: 0;
 			transition: opacity 0.3s ease-out;
 			}
 
 			button.added{
-				opacity: 0.5;
+				/*background: #03bd57;*/
+				color: #fff;
+				/*border: 1px #03bd57 solid;*/
+				
+			  animation: ${addedButtonAnimation} 0.75s ease-out forwards;
+			/*animation-delay: 0.5s;*/
 			}
 		}
 		
