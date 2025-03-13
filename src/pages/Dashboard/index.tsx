@@ -55,13 +55,13 @@ const Dashboard: React.FC = () => {
 		const searchTerm = repoPath.split('/')[1];
 		const userChange = user != repoUser;
 
+		setInputError('');
 		if (searchTerm != repoSearchTerm) setRepoSearchTerm(searchTerm);
 
 		if (userChange){
 			setRepoUser(user);
 			setSearchedRepoLimitError(false);
 			setSearchedRepositories(null);
-			setInputError('');
 			setShowSearchPreview(false)
 		}
 
@@ -77,9 +77,18 @@ const Dashboard: React.FC = () => {
 		}
   }, [repoPath, searchedRepositories]);
 
-function addRepository(repository: Repository):void {
-      setRepositories([...repositories, repository]);
-}
+	function addRepository(repository: Repository):void {
+		setInputError('');
+
+		for(let storedRepo of repositories){
+			if (repository.full_name == storedRepo.full_name){
+				setInputError("Esse repositório já foi adicionado");
+				return
+			}
+		}
+
+    setRepositories([...repositories, repository]);
+	}
 
  async function handlePreviewRepository(): Promise<void> {
 		if (!repoPath) {
