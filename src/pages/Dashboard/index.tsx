@@ -77,17 +77,21 @@ const Dashboard: React.FC = () => {
 		}
   }, [repoPath, searchedRepositories]);
 
+	function repositoryAlreadyAdded(repository: Repository){
+		for(let storedRepo of repositories){
+			if (repository.full_name == storedRepo.full_name) return true
+		}
+		return false
+	}
+
 	function addRepository(repository: Repository):void {
 		setInputError('');
 
-		for(let storedRepo of repositories){
-			if (repository.full_name == storedRepo.full_name){
-				setInputError("Esse repositório já foi adicionado");
-				return
-			}
+		if (repositoryAlreadyAdded(repository)){
+			setInputError("Esse repositório já foi adicionado");
+			return
 		}
-
-    setRepositories([...repositories, repository]);
+			setRepositories([...repositories, repository]);
 	}
 
  async function handlePreviewRepository(): Promise<void> {
@@ -210,7 +214,12 @@ function searchMatchScore(str: string, subStr: string): number {
 									<p>
 										{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}
 									</p>
-									<button type="button"><span>Adicionar</span></button>
+									{repositoryAlreadyAdded(repo) ? 
+										<button className="added" type="button"><span>Adicionado</span></button>
+										: 
+										<button type="button"><span>Adicionar</span></button>
+									 }
+									
 								</div>
 								</li>
 							))}
