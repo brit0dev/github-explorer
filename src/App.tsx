@@ -6,7 +6,7 @@ import AppRoutes from './routes';
 
 const App: React.FC = () => (
   <>
-    <BrowserRouter>
+    <BrowserRouter basename="/github-explorer/">
       <AppRoutes />
     </BrowserRouter>
     <GlobalStyle />

@@ -3,31 +3,38 @@ import { FiChevronRight } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import logoImg from '../../assets/logo.svg';
-import { Title, Form, Repositories, Main, SearchPreviewBox , Error } from './styles';
+import {
+  Title,
+  Form,
+  Repositories,
+  Main,
+  SearchPreviewBox,
+  Error,
+} from './styles';
 
 type Repository = {
   name: string;
-	full_name: string;
+  full_name: string;
   description: string;
   owner: {
     login: string;
     avatar_url: string;
   };
-	stargazers_count: number;
+  stargazers_count: number;
 };
 
 type UserData = {
-	login: string;
-	avatar_url: string;
+  login: string;
+  avatar_url: string;
 
-	url: string;
-	public_repos: number;
-}
+  url: string;
+  public_repos: number;
+};
 
 const Dashboard: React.FC = () => {
   const [repoPath, setRepoPath] = useState('');
-	const [repoUser, setRepoUser] = useState('');
-	const [repoSearchTerm, setRepoSearchTerm] = useState('');
+  const [repoUser, setRepoUser] = useState('');
+  const [repoSearchTerm, setRepoSearchTerm] = useState('');
   const [inputError, setInputError] = useState('');
   const [repositories, setRepositories] = useState<Repository[]>(() => {
     const storagedRepositories = localStorage.getItem(
@@ -39,9 +46,16 @@ const Dashboard: React.FC = () => {
     }
     return [];
   });
-	const [showSearchPreview, setShowSearchPreview] = useState(false);
-	const [searchedRepositories, setSearchedRepositories] = useState<Repository[] | null>(null);
-	const [searchedRepoLimitError, setSearchedRepoLimitError] = useState<boolean>(false);
+  const [showSearchPreview, setShowSearchPreview] = useState(false);
+  const [searchedRepositories, setSearchedRepositories] = useState<
+    Repository[] | null
+  >(null);
+  const [searchedRepoLimitError, setSearchedRepoLimitError] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    addDemoRepository();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(
@@ -51,119 +65,137 @@ const Dashboard: React.FC = () => {
   }, [repositories]);
 
   useEffect(() => {
-		const user = repoPath.split('/')[0];
-		const searchTerm = repoPath.split('/')[1];
-		const userChange = user != repoUser;
+    const user = repoPath.split('/')[0];
+    const searchTerm = repoPath.split('/')[1];
+    const userChange = user != repoUser;
 
-		setInputError('');
-		if (searchTerm != repoSearchTerm) setRepoSearchTerm(searchTerm);
+    setInputError('');
+    if (searchTerm != repoSearchTerm) setRepoSearchTerm(searchTerm);
 
-		if (userChange){
-			setRepoUser(user);
-			setSearchedRepoLimitError(false);
-			setSearchedRepositories(null);
-			setShowSearchPreview(false)
-		}
+    if (userChange) {
+      setRepoUser(user);
+      setSearchedRepoLimitError(false);
+      setSearchedRepositories(null);
+      setShowSearchPreview(false);
+    }
 
-		if (repoPath.includes("/") && !searchedRepositories && (!searchedRepoLimitError || userChange)){
-			handlePreviewRepository()
-		} else if(!repoPath.includes("/")){
-			setSearchedRepositories(null);
-			setRepoUser('');
-			setRepoSearchTerm('');
-			setShowSearchPreview(false)
-		} else if(searchedRepoLimitError && inputError){
-			setInputError('');
-		}
+    if (
+      repoPath.includes('/') &&
+      !searchedRepositories &&
+      (!searchedRepoLimitError || userChange)
+    ) {
+      handlePreviewRepository();
+    } else if (!repoPath.includes('/')) {
+      setSearchedRepositories(null);
+      setRepoUser('');
+      setRepoSearchTerm('');
+      setShowSearchPreview(false);
+    } else if (searchedRepoLimitError && inputError) {
+      setInputError('');
+    }
   }, [repoPath, searchedRepositories]);
 
-	function repositoryAlreadyAdded(repository: Repository){
-		for(let storedRepo of repositories){
-			if (repository.full_name == storedRepo.full_name) return true
-		}
-		return false
-	}
+  function addDemoRepository(): void {
+    api.get(`repos/facebook/react`).then((response) => {
+      let repository = response.data;
 
-	function addRepository(repository: Repository):void {
-		setInputError('');
+      if (!repositoryAlreadyAdded(repository)) {
+        setRepositories([...repositories, repository]);
+      }
+    });
+  }
 
-		if (repositoryAlreadyAdded(repository)){
-			setInputError("Esse repositório já foi adicionado");
-			return
-		}
-			setRepositories([...repositories, repository]);
-	}
+  function repositoryAlreadyAdded(repository: Repository) {
+    for (let storedRepo of repositories) {
+      if (repository.full_name == storedRepo.full_name) return true;
+    }
+    return false;
+  }
 
- async function handlePreviewRepository(): Promise<void> {
-		if (!repoPath) {
+  function addRepository(repository: Repository): void {
+    setInputError('');
+
+    if (repositoryAlreadyAdded(repository)) {
+      setInputError('Esse repositório já foi adicionado');
+      return;
+    }
+    setRepositories([...repositories, repository]);
+  }
+
+  async function handlePreviewRepository(): Promise<void> {
+    if (!repoPath) {
       setInputError('Digite o autor/nome do repositório');
 
       return;
     }
 
     try {
-			const user = repoPath.split('/')[0];
-			const userData = await api.get<UserData>(`users/${user}`);			
-			const userReposCount = userData.data.public_repos;
+      const user = repoPath.split('/')[0];
+      const userData = await api.get<UserData>(`users/${user}`);
+      const userReposCount = userData.data.public_repos;
 
-			console.log(userData)		
-	
-			if (userReposCount > 500) {
-				setInputError('Muitos repositórios, não será possível exibir o preview. Digite o caminho completo do repositório.')
-				setSearchedRepoLimitError(true)
-				return
-			} else if (userReposCount == 0){
-				setInputError('Esse usuário não possui repositórios públicos');
-				return
-			}
+      console.log(userData);
 
-			setShowSearchPreview(true);
+      if (userReposCount > 500) {
+        setInputError(
+          'Muitos repositórios, não será possível exibir o preview. Digite o caminho completo do repositório.'
+        );
+        setSearchedRepoLimitError(true);
+        return;
+      } else if (userReposCount == 0) {
+        setInputError('Esse usuário não possui repositórios públicos');
+        return;
+      }
 
-			const totalPages = Math.ceil(userReposCount / 100);
-			let repositories:Repository[] = [];
+      setShowSearchPreview(true);
 
-			for(let i=1; i <= totalPages; i++){
-				const response = await api.get<Repository[]>(`users/${user}/repos?per_page=100&page=${i}`);
-				repositories = [...repositories, ...response.data]
-			}
+      const totalPages = Math.ceil(userReposCount / 100);
+      let repositories: Repository[] = [];
 
-			setSearchedRepositories(repositories);
-			console.log(repositories);
+      for (let i = 1; i <= totalPages; i++) {
+        const response = await api.get<Repository[]>(
+          `users/${user}/repos?per_page=100&page=${i}`
+        );
+        repositories = [...repositories, ...response.data];
+      }
+
+      setSearchedRepositories(repositories);
+      console.log(repositories);
     } catch (err) {
       setInputError('Erro na buscar por esse repositório');
     }
   }
 
-	function handleAddRepository(repository: Repository): React.MouseEventHandler<HTMLLIElement>{
-		return (event: React.MouseEvent<HTMLLIElement>) => {
-			
-			const button = event.currentTarget.querySelector('button');
-			if (button){ 
-				button.classList.add("added");
-				button.children[0].textContent = "Adicionado";
-			}
+  function handleAddRepository(
+    repository: Repository
+  ): React.MouseEventHandler<HTMLLIElement> {
+    return (event: React.MouseEvent<HTMLLIElement>) => {
+      const button = event.currentTarget.querySelector('button');
+      if (button) {
+        button.classList.add('added');
+        button.children[0].textContent = 'Adicionado';
+      }
 
-			addRepository(repository)
-			
-		}
-	}
+      addRepository(repository);
+    };
+  }
 
- async function handleSearchRepository(
+  async function handleSearchRepository(
     event?: FormEvent<HTMLFormElement>
   ): Promise<void> {
     // Add new repo - Get GitHub API - Save new repo on state
-		if(event) event.preventDefault(); //Prevents page reloading (submit)
-    
-		if (!repoPath) {
+    if (event) event.preventDefault(); //Prevents page reloading (submit)
+
+    if (!repoPath) {
       setInputError('Digite o autor/nome do repositório');
       return;
     }
 
     try {
-     	const response = await api.get<Repository>(`repos/${repoPath}`);
-			const repository = response.data;
+      const response = await api.get<Repository>(`repos/${repoPath}`);
+      const repository = response.data;
 
-			addRepository(repository);
+      addRepository(repository);
 
       setRepoPath('');
       setInputError('');
@@ -172,20 +204,22 @@ const Dashboard: React.FC = () => {
     }
   }
 
-function searchMatchScore(str: string, subStr: string): number {
+  function searchMatchScore(str: string, subStr: string): number {
     str = str.toLowerCase();
     subStr = subStr.toLowerCase();
 
     let index = str.indexOf(subStr);
     let indexScore = index === -1 ? Infinity : index;
 
-    let commonChars = Array.from(subStr).filter(char => str.includes(char)).length;
+    let commonChars = Array.from(subStr).filter((char) =>
+      str.includes(char)
+    ).length;
 
     let lengthScore = str.length;
 
-		console.log(str, subStr, indexScore, lengthScore)
-    return 100/(indexScore+1) - commonChars - lengthScore;
-}
+    console.log(str, subStr, indexScore, lengthScore);
+    return 100 / (indexScore + 1) - commonChars - lengthScore;
+  }
 
   return (
     <Main>
@@ -193,58 +227,79 @@ function searchMatchScore(str: string, subStr: string): number {
       <Title>Explore Repositórios no Github</Title>
 
       <Form hasError={!!inputError} onSubmit={handleSearchRepository}>
-				<div className="input">
-        <input
-          value={repoPath}
-          onChange={(e) => setRepoPath(e.target.value)}
-          placeholder="Digite o nome do repositório."
-        />
-        <button type="submit">Pesquisar</button>
-				</div>
+        <div className="input">
+          <input
+            value={repoPath}
+            onChange={(e) => setRepoPath(e.target.value)}
+            placeholder="Digite o caminho do repositório e clique em adicionar."
+          />
+          <button type="submit">Adicionar</button>
+        </div>
 
-				{(showSearchPreview) && 
-					<SearchPreviewBox open={!!searchedRepositories}>
-						<ul>
-							{searchedRepositories && searchedRepositories.sort((a,b)=> b.stargazers_count - a.stargazers_count)
-							.filter((repo)=>repo.name.toLowerCase().includes(repoSearchTerm.toLowerCase()))
-							.sort((a,b)=> searchMatchScore(b.name, repoSearchTerm) - searchMatchScore(a.name, repoSearchTerm))
-							.slice(0,5).map((repo)=>(
-								<li key={repo.name} onClick={handleAddRepository(repo)}>
-								<div>
-									<p>
-										{repo.owner.login}<span>/{repo.name}</span><br/> {repo.description ? repo.description : "No description..."}
-									</p>
-									{repositoryAlreadyAdded(repo) ? 
-										<button className="added" type="button"><span>Adicionado</span></button>
-										: 
-										<button type="button"><span>Adicionar</span></button>
-									 }
-									
-								</div>
-								</li>
-							))}
-					</ul>
-				</SearchPreviewBox>}
-
+        {showSearchPreview && (
+          <SearchPreviewBox open={!!searchedRepositories}>
+            <ul>
+              {searchedRepositories &&
+                searchedRepositories
+                  .sort((a, b) => b.stargazers_count - a.stargazers_count)
+                  .filter((repo) =>
+                    repo.name
+                      .toLowerCase()
+                      .includes(repoSearchTerm.toLowerCase())
+                  )
+                  .sort(
+                    (a, b) =>
+                      searchMatchScore(b.name, repoSearchTerm) -
+                      searchMatchScore(a.name, repoSearchTerm)
+                  )
+                  .slice(0, 5)
+                  .map((repo) => (
+                    <li key={repo.name} onClick={handleAddRepository(repo)}>
+                      <div>
+                        <p>
+                          {repo.owner.login}
+                          <span>/{repo.name}</span>
+                          <br />{' '}
+                          {repo.description
+                            ? repo.description
+                            : 'No description...'}
+                        </p>
+                        {repositoryAlreadyAdded(repo) ? (
+                          <button className="added" type="button">
+                            <span>Adicionado</span>
+                          </button>
+                        ) : (
+                          <button type="button">
+                            <span>Adicionar</span>
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+            </ul>
+          </SearchPreviewBox>
+        )}
       </Form>
       {inputError && <Error>{inputError}</Error>}
       <Repositories>
-        {repositories.map((repository) => (
-          <Link
-            key={repository.full_name}
-            to={`/repository/${repository.full_name}`}
-          >
-            <img
-              src={repository.owner.avatar_url}
-              alt={repository.owner.login}
-            />
-            <div>
-              <strong>{repository.full_name}</strong>
-              <p>{repository.description}</p>
-            </div>
-            <FiChevronRight size={20} />
-          </Link>
-        )).reverse()}
+        {repositories
+          .map((repository) => (
+            <Link
+              key={repository.full_name}
+              to={`/repository/${repository.full_name}`}
+            >
+              <img
+                src={repository.owner.avatar_url}
+                alt={repository.owner.login}
+              />
+              <div>
+                <strong>{repository.full_name}</strong>
+                <p>{repository.description}</p>
+              </div>
+              <FiChevronRight size={20} />
+            </Link>
+          ))
+          .reverse()}
       </Repositories>
     </Main>
   );
